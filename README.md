@@ -17,7 +17,6 @@ Updated for Manifest V3 and modern browsers.
 - Open a Twine/SugarCube game in your browser.  
 - Click the TwineForge icon in the toolbar, or use keyboard shortcuts:  
   - **Ctrl+Shift+H** → inject TwineForge UI  
-  - **Ctrl+Shift+K** → list custom globals in the Console
   - **Ctrl+Shift+R** → resets position and size if window got off screen and cannot me moved
 - If the game runs inside an `<iframe>` (e.g. itch.io), right-click the frame → *Open frame in new tab* → then use the extension.
 
