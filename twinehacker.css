@@ -158,3 +158,68 @@
 #VarStateContainer .var-type-object.properties-open > .var-properties{
   max-height: 10000px !important;
 }
+
+
+/* ===== ForgeLink (Update Checker) ===== */
+#VarStateContainer #th-right{ display:flex; justify-content:flex-end; align-items:center; }
+#VarStateContainer #th-update{ display:flex; align-items:center; gap:8px; }
+#VarStateContainer #th-update-check{
+  background:#151a22; border:1px solid #2b3140; color:#cfd3dc;
+  padding:6px 10px; border-radius:10px; font-size:12px; cursor:pointer;
+}
+#VarStateContainer #th-update-check:hover{ background:#1a2130; border-color:#3b4257; }
+#VarStateContainer #th-update-badge{
+  display:inline-block; font-size:11px; line-height:1; padding:5px 8px;
+  border-radius:999px; border:1px solid transparent; user-select:none;
+}
+#VarStateContainer #th-update-badge.ok{
+  background:#0f1a12; color:#9ff0b1; border-color:#204a32;
+}
+#VarStateContainer #th-update-badge.new{
+  background:#1f170a; color:#ffd28a; border-color:#5a3a12;
+}
+#VarStateContainer #th-update-badge.err{
+  background:#16161a; color:#b7bcc9; border-color:#2a2e37;
+}
+
+
+/* User-skin banner overlay */
+#VarStateContainer #th-header { position: sticky; top: 0; overflow: hidden; }
+#VarStateContainer #th-header .th-banner{
+  position:absolute; inset:0 0 auto 0; height:64px;
+  background-size:cover; background-position:center;
+  opacity:.22; pointer-events:none; filter:saturate(1.05) contrast(1.05);
+}
+#VarStateContainer #th-header > *:not(.th-banner){ position:relative; z-index:1; }
+
+
+/* ===== Update Footer ===== */
+#VarStateContainer #th-footer {
+  margin: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  background: linear-gradient(180deg, #14161a, #0f1114);
+  border: 1px solid #2a2e37;
+  color: #ffd28a;
+  border-radius: 10px;
+  display: none;
+}
+#VarStateContainer #th-footer .msg b {
+  color: #ffe49a;
+  text-decoration: underline;
+}
+
+/* ForgeLink highlight when update available */
+#VarStateContainer #th-update-check.new {
+  border-color: #5a3a12;
+  background: #1a1408;
+  color: #ffd28a;
+  box-shadow: 0 0 12px rgba(255,210,138,.25);
+}
+#VarStateContainer #th-update-check.new:hover {
+  border-color: #7a4a16;
+  background: #20170a;
+}
+

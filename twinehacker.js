@@ -1,4 +1,7 @@
 
+
+// === TwineForge meta ===
+const TF_VERSION = '1.1'; // keep in sync with manifest.json.version
 // TwineForge — clean build: pins, skinsbar, drag+resize, fixed Open/unpin
 (function(){try{if(typeof window.cont!=='function'){window.cont=function(){return document.getElementById('VarStateContainer');};}}catch(e){}})();
 function initFailed (msg){ alert("Failed to load TwineForge. Reason: " + msg); }
@@ -18,7 +21,8 @@ function trackChanges(oldVariablesJson){
         for(var i = 0; i < diffKeys.length; i++) {
           var diffKey = diffKeys[i]; var diffVal = diffs[diffKey];
           if(updateDOMValues) {
-            var inputElement = document.querySelector('.Gamestate.' + diffKey);
+            var ref = 'Gamestate.' + diffKey;
+            var inputElement = document.querySelector('.var-input[data-ref="' + ref.replace(/"/g, '\"') + '"]');
             if(inputElement) { inputElement.value = diffVal.newVal; inputElement.classList.add('value-changed'); }
           }
         }
@@ -43,7 +47,7 @@ var objectToDOM = (function(){
   function numberToDOM(num, key, ref){
     var _parent = document.createElement('div'); _parent.classList.add('var-field','var-type-number');
     var _title = document.createElement('span'); _title.classList.add('var-title'); _title.innerText = key;
-    var _input = document.createElement('input'); _input.classList.add('var-input'); _input.setAttribute('type', 'number'); _input.value = num;
+    var _input = document.createElement('input'); _input.classList.add('var-input'); _input.setAttribute('type', 'number'); _input.setAttribute('data-ref', ref); _input.value = num;
     var refArr = ref.split("."); for(var k in refArr){ _input.classList.add(refArr[k]); }
     _parent.appendChild(_title); _parent.appendChild(_input);
     function inputHandler(e){ e.stopPropagation(); var value = parseFloat(_input.value); var event = new CustomEvent('propertyChange', { detail: {key: key, value: value }, bubbles: true}); _input.dispatchEvent(event); }
@@ -52,7 +56,7 @@ var objectToDOM = (function(){
   function stringToDOM(str, key, ref){
     var _parent = document.createElement('div'); _parent.classList.add('var-field','var-type-text');
     var _title = document.createElement('span'); _title.classList.add('var-title'); _title.innerText = key;
-    var _input = document.createElement('input'); _input.classList.add('var-input'); _input.setAttribute('type', 'text'); _input.value = str;
+    var _input = document.createElement('input'); _input.classList.add('var-input'); _input.setAttribute('type', 'text'); _input.setAttribute('data-ref', ref); _input.value = str;
     var refArr = ref.split("."); for(var k in refArr){ _input.classList.add(refArr[k]); }
     _parent.appendChild(_title); _parent.appendChild(_input);
     function inputHandler(e){ e.stopPropagation(); var event = new CustomEvent('propertyChange', { detail: {key: key, value: _input.value }}); _input.dispatchEvent(event); }
@@ -135,9 +139,24 @@ else {
       const prevBtn=document.createElement('button'); prevBtn.id='th-prev'; prevBtn.title='Previous result'; prevBtn.textContent='▲';
       const nextBtn=document.createElement('button'); nextBtn.id='th-next'; nextBtn.title='Next result'; nextBtn.textContent='▼';
       findNav.appendChild(prevBtn); findNav.appendChild(nextBtn); sw.appendChild(findNav);
-      head.appendChild(title); head.appendChild(sw);
-      el.insertBefore(head, el.firstChild);
-      wireHeader(head);
+  // right side container + ForgeLink button
+  const right = document.createElement('div');
+  right.id = 'th-right';
+  const updWrap = document.createElement('div');
+  updWrap.id = 'th-update';
+  const updBtn = document.createElement('button');
+  updBtn.id = 'th-update-check';
+  updBtn.title = 'Check for updates';
+  updBtn.textContent = 'ForgeLink';
+  const badge = document.createElement('span');
+  badge.id = 'th-update-badge';
+  badge.textContent = '…';
+  badge.style.display = 'none';
+  updWrap.appendChild(updBtn);
+  updWrap.appendChild(badge);
+  right.appendChild(updWrap);
+  head.appendChild(right);
+  head.appendChild(title); head.appendChild(sw); el.insertBefore(head, el.firstChild); wireHeader(head);
     } else if(!head.dataset.wired){ wireHeader(head); }
     ensureSkinsBar(head);
   }
@@ -160,6 +179,7 @@ else {
         const val=row.querySelector('.var-input')?.value||'';
         const match= ql==='' ? true : (key+' '+val).toLowerCase().includes(ql);
         row.style.display = match ? '' : 'none'; row.classList.toggle('th-match', match && ql!=='');
+    installUpdateChecker(head);
       });
       if(ql){ $$(el,'.var-type-object').forEach(s=>s.classList.add('properties-open')); }
       clearCurrent(); findState.list = ql ? collectMatches() : []; findState.idx  = findState.list.length ? 0 : -1; if(findState.idx>=0) focusMatch(0);
@@ -183,6 +203,204 @@ else {
     const reloadBtn=document.createElement('button'); reloadBtn.id='th-reload-skins'; reloadBtn.textContent='Reload';
     bar.appendChild(select); bar.appendChild(reloadBtn);
     head.appendChild(bar);
+    /* pre-populate user skins before fetch */
+    try{
+      const selInit = select;
+      if (selInit && selInit.options && selInit.options.length<=1){
+        populateSelectWithUserSkins();
+        setSelectToSaved();
+      }
+    }catch(e){}
+    // === User Skin Import (localStorage-based) ===
+    const USER_SKINS_KEY = 'TH_USER_SKINS';
+    function getUserSkins(){ try{ return JSON.parse(localStorage.getItem(USER_SKINS_KEY) || '[]'); }catch(e){ return []; } }
+    function setUserSkins(arr){ try{ localStorage.setItem(USER_SKINS_KEY, JSON.stringify(arr)); }catch(e){} }
+    
+    function addUserOption(us){
+      const val = 'user:' + us.id;
+      if (!Array.from(select.options).some(o=>o.value===val)){
+        const opt = new Option('★ ' + (us.name || us.id), val);
+        opt.dataset.user = '1';
+        select.appendChild(opt);
+      }
+    }
+
+    function populateSelectWithUserSkins(){
+      const users = getUserSkins();
+      users.forEach(us => {
+        const val = 'user:' + us.id;
+        if (!Array.from(select.options).some(o=>o.value===val)){
+          const opt = new Option('★ ' + (us.name || us.id), val);
+          opt.dataset.user = '1';
+          select.appendChild(opt);
+        }
+      });
+    }
+    function ensureBanner(dataUrl){
+      const headEl = document.getElementById('th-header');
+      if (!headEl) return;
+      let bn = headEl.querySelector('.th-banner');
+      if (!dataUrl){ if (bn) bn.remove(); return; }
+      if (!bn){ bn = document.createElement('div'); bn.className = 'th-banner'; headEl.prepend(bn); }
+      bn.style.backgroundImage = "url('" + dataUrl + "')";
+    }
+    
+    function ensureCurrentOption(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(SKIN_KEY) || 'null');
+        if(!saved || !saved.id) return;
+        const val = String(saved.id);
+        if (Array.from(select.options).some(o=>o.value===val)) return;
+        let label = val;
+        if (val.startsWith('user:')){
+          const uid = val.slice(5);
+          let users=[]; try{ users = JSON.parse(localStorage.getItem(USER_SKINS_KEY) || '[]'); }catch(e){}
+          const u = users.find(x=>x.id===uid);
+          label = '★ ' + (u && u.name ? u.name : uid);
+        }
+        const opt = new Option(label, val);
+        if (val.startsWith('user:')) opt.dataset.user = '1';
+        select.appendChild(opt);
+      }catch(e){}
+    }
+    function setSelectToSaved(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(SKIN_KEY) || 'null');
+        if(!saved || !saved.id) return;
+        const val = String(saved.id);
+        if (!Array.from(select.options).some(o=>o.value===val)){
+          if (val.startsWith('user:')){
+            const uid = val.slice(5);
+            let users=[]; try{ users = JSON.parse(localStorage.getItem(USER_SKINS_KEY) || '[]'); }catch(e){}
+            const u = users.find(x=>x.id===uid);
+            if (u){
+              const opt = new Option('★ ' + (u.name||uid), val);
+              opt.dataset.user='1';
+              select.appendChild(opt);
+            }
+          }
+        }
+        if (Array.from(select.options).some(o=>o.value===val)){
+          select.value = val;
+        }
+      }catch(e){}
+    }
+
+
+    function applyUserSkinById(id){
+      const users = getUserSkins();
+      const skin = users.find(s=>s.id===id);
+      if (!skin) return;
+      const root=cont();
+      Array.from(root.classList).filter(c=>c.startsWith('skin-')).forEach(c=>root.classList.remove(c));
+      // remove built-in link if any
+      const link=document.getElementById(skinLinkId); if (link) link.remove();
+      // inject inline style
+      let style=document.getElementById('th-skin-inline');
+      if(!style){ style=document.createElement('style'); style.id='th-skin-inline'; document.documentElement.appendChild(style); }
+      style.textContent = skin.css || '/* empty */';
+      if (skin.skinClass) root.classList.add(skin.skinClass);
+      ensureBanner(skin.bannerDataUrl || null);
+      try{ localStorage.setItem(SKIN_KEY, JSON.stringify({ id: 'user:'+id, user: true })); }catch(e){}
+    }
+    // Import UI
+    const importBtn = document.createElement('button');
+    importBtn.id = 'th-import-skin'; importBtn.textContent = 'Import';
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file'; fileInput.accept = '.css,.tfs.json,application/json,text/css'; fileInput.style.display='none';
+    bar.appendChild(importBtn); bar.appendChild(fileInput);
+    // Delete (only for user skins)
+    const delBtn = document.createElement('button');
+    delBtn.id = 'th-delete-skin'; delBtn.textContent = 'Delete';
+    delBtn.disabled = true;
+    bar.appendChild(delBtn);
+
+    function removeUserSkinById(id){
+      let users = getUserSkins();
+      users = users.filter(u => u.id !== id);
+      setUserSkins(users);
+      const style = document.getElementById('th-skin-inline'); if (style) style.remove();
+      Array.from(cont().classList).filter(c=>c.startsWith('skin-')).forEach(c=>cont().classList.remove(c));
+      Array.from(select.querySelectorAll('option[data-user="1"]')).forEach(o=>o.remove());
+      populateSelectWithUserSkins();
+      select.value='__none__';
+      const link=document.getElementById(skinLinkId); if (link) link.remove();
+      try{ localStorage.removeItem(SKIN_KEY); }catch(e){}
+    }
+
+    function updateDeleteBtn(){
+      try{ delBtn.disabled = !String(select.value||'').startsWith('user:'); }catch(e){ delBtn.disabled = true; }
+    }
+
+    delBtn.addEventListener('click', ()=>{
+      const v = String(select.value||'');
+      if (!v.startsWith('user:')) return;
+      const id = v.slice(5);
+      try{
+        if (confirm('Remove this imported skin?')) removeUserSkinById(id);
+      }catch(e){ removeUserSkinById(id); }
+      updateDeleteBtn();
+    });
+    
+    importBtn.addEventListener('click', ()=> fileInput.click());
+    async function importFile(file){
+      const text = await file.text();
+      let name = file.name.replace(/\.(css|tfs\.json|json)$/i,'');
+      let id = (name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || ('skin-'+Date.now()));
+      let css = '', bannerDataUrl = null, skinClass = 'skin-custom';
+      if (/\.css$/i.test(file.name)) { css = text; }
+      else {
+        const pkg = JSON.parse(text);
+        id = pkg.id || id; name = pkg.name || name; css = pkg.css || '';
+        bannerDataUrl = pkg.bannerDataUrl || null; skinClass = pkg.skinClass || ('skin-'+(pkg.id||'custom'));
+      }
+      const users = getUserSkins();
+      // Replace if same id exists
+      const idx = users.findIndex(u=>u.id===id);
+      const rec = { id, name, css, bannerDataUrl, skinClass };
+      if (idx>=0) users[idx] = rec; else users.push(rec);
+      setUserSkins(users);
+      (function(){
+        const existing = Array.from(select.querySelectorAll('option[data-user="1"]')).find(o=>o.value==='user:'+id);
+        if (existing) existing.remove();
+        addUserOption({ id, name, css, bannerDataUrl, skinClass });
+      })();
+      select.value = 'user:' + id;
+      applyUserSkinById(id);
+    }
+    fileInput.addEventListener('change', async (e)=>{
+      const list = e.target.files||[];
+      const f = list.length ? list[0] : null;
+      if (!f) return;
+      if (!/\.css$|\.tfs\.json$|\.json$/i.test(f.name)) return;
+      await importFile(f);
+    });
+    // Drag & drop on header
+    (function(){
+      const header = document.getElementById('th-header') || head;
+      ['dragenter','dragover'].forEach(ev => header.addEventListener(ev, e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; }));
+      header.addEventListener('drop', async (e)=>{
+      e.preventDefault();
+      let file = null;
+      try{
+        const items = e.dataTransfer && e.dataTransfer.items;
+        if (items && items.length){
+          for (const it of items){
+            if (it.kind === 'file'){
+              const f = it.getAsFile && it.getAsFile();
+              if (f && f.size >= 0){ file = f; break; }
+            }
+          }
+        }
+      }catch(err){}
+      if (!file){
+        const list = e.dataTransfer && e.dataTransfer.files;
+        if (list && list.length){ file = list[0]; }
+      }
+      if (file && (/\.css$|\.tfs\.json$|\.json$/i.test(file.name))) await importFile(file);
+    });
+    })();
+    
 
     const skinLinkId='th-skin-link';
     function applySkin(id, href, addClass){
@@ -201,6 +419,22 @@ else {
       } else { link.href=href; }
       localStorage.setItem(SKIN_KEY, JSON.stringify({id, href, addClass}));
     }
+    
+    function immediateRestore(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(SKIN_KEY) || 'null');
+        if(saved && saved.id){
+          if(String(saved.id).startsWith('user:')){
+            applyUserSkinById(String(saved.id).slice(5));
+            select.value = saved.id;
+          } else if (saved.href){
+            applySkin(saved.id, saved.href, saved.addClass);
+            select.value = saved.id;
+          }
+        }
+      }catch(e){}
+    }
+
     async function loadSkinsList(){
       const base=(document.getElementById('th-style')?.getAttribute('href')||'').replace(/twinehacker\.css.*$/,''); 
       const url=base + 'Skins/skins.json';
@@ -214,22 +448,125 @@ else {
           opt.dataset.cls = 'skin-' + (s.id||'custom');
           select.appendChild(opt);
         });
+        // Add user skins (clear previous user options first)
+        Array.from(select.querySelectorAll('option[data-user="1"]')).forEach(o=>o.remove());
+        populateSelectWithUserSkins();
         try{
           const saved = JSON.parse(localStorage.getItem(SKIN_KEY) || 'null');
-          if(saved && saved.id){ select.value = saved.id; applySkin(saved.id, saved.href, saved.addClass); }
+          if(saved && saved.id){
+            if(String(saved.id).startsWith('user:')){ applyUserSkinById(String(saved.id).slice(5)); select.value = saved.id; }
+            else { select.value = saved.id; applySkin(saved.id, saved.href, saved.addClass); }
+          }
           else { select.value='__none__'; }
+        setSelectToSaved();
+        ensureCurrentOption();
         }catch(e){}
-      }catch(err){ console.warn('[TwineForge] Unable to load skins list:', err); }
+      } catch (err) {
+        console.warn('[TwineForge] Unable to load skins list:', err);
+        try {
+          // Fallback: keep selector usable with user skins only
+          select.innerHTML = '';
+          select.appendChild(new Option('None (default)','__none__'));
+          populateSelectWithUserSkins();
+          setSelectToSaved();
+          ensureCurrentOption();
+        } catch(e){}
+      }
     }
     reloadBtn.addEventListener('click', loadSkinsList);
     select.addEventListener('change',()=>{
+      updateDeleteBtn();
+      if (String(select.value||'').startsWith('user:')){ applyUserSkinById(select.value.slice(5)); return; }
       const v=select.value; if(v==='__none__'){ applySkin(v, null, null); return; }
       const opt=select.options[select.selectedIndex]; const href=opt.dataset.href; const cls=opt.dataset.cls; applySkin(v, href, cls);
     });
+    immediateRestore();
+    setSelectToSaved();
+    ensureCurrentOption();
     loadSkinsList();
   }
 
-  /* Pinned system */
+  // ===== ForgeLink (Update Checker) =========================================
+function installUpdateChecker(head){
+  if (!head || head.dataset.updateChecker === '1') return;
+  head.dataset.updateChecker = '1';
+
+  const btn   = head.querySelector('#th-update-check');
+  const badge = head.querySelector('#th-update-badge');
+  if (!btn || !badge) return;
+
+  function setBadge(kind, text){
+  badge.style.display='';
+  badge.textContent=text;
+  badge.classList.remove('ok','new','err');
+  badge.classList.add(kind);
+  try{ btn.classList.toggle('new', kind==='new'); }catch(e){}
+}
+
+  function cmpSemver(a,b){
+    const pa = String(a||'').split('.').map(n=>parseInt(n||'0',10));
+    const pb = String(b||'').split('.').map(n=>parseInt(n||'0',10));
+    for(let i=0;i<3;i++){
+      const da = pa[i]||0, db = pb[i]||0;
+      if(da>db) return 1; if(da<db) return -1;
+    }
+    return 0;
+  }
+
+  async function fetchRemoteVersion(){
+    const url = 'https://raw.githubusercontent.com/ErDragon/TwineForge/main/manifest.json';
+    const res = await fetch(url, { cache: 'no-store' });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const j = await res.json();
+    return j && j.version ? j.version : null;
+  }
+
+  async function runCheck(){
+    try{
+      setBadge('err','…');
+      const remote = await fetchRemoteVersion();
+      if(!remote){ setBadge('err','N/A'); return; }
+      const rel = cmpSemver(remote, TF_VERSION);
+      if(rel>0){
+        setBadge('new', 'v'+remote);
+        btn.title = 'Update available: v'+remote+' (click to open releases)';
+        btn.dataset.updateUrl = 'https://github.com/ErDragon/TwineForge/releases';
+      } else {
+        setBadge('ok', 'Up to date');
+        btn.title = 'Latest version installed (v'+TF_VERSION+')';
+        btn.dataset.updateUrl = '';
+      }
+    }catch(e){
+      setBadge('err','Offline');
+      btn.title = 'Update check failed: '+(e && e.message ? e.message : e);
+      btn.dataset.updateUrl = '';
+    }
+  }
+
+  btn.addEventListener('click', ()=>{
+    if (btn.dataset.updateUrl){
+      try{ window.open(btn.dataset.updateUrl, '_blank', 'noopener'); }catch(e){}
+    } else {
+      runCheck();
+    }
+  });
+
+
+  // Create update footer if not exists
+  let footer = document.getElementById('th-footer');
+  if (!footer) {
+    footer = document.createElement('div');
+    footer.id = 'th-footer';
+    footer.innerHTML = `<span class="msg">New version is available! Click <b>ForgeLink</b> to download it.</span>`;
+    const cont = document.getElementById('VarStateContainer');
+    if (cont) cont.appendChild(footer);
+    footer.style.display = 'none';
+  }
+
+  runCheck();
+}
+
+/* Pinned system */
   function ensurePinnedSection(){
     const el=cont(); if(!el) return null;
     let sec=document.getElementById('TH-PINNED');
