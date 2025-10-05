@@ -1,58 +1,26 @@
 {
   "name": "TwineForge",
   "short_name": "TwineForge",
-  "version": "1.1",
-  "description": "Updated MV3 build of TwineHacker for Chrome. Works with local files (file://) and localhost. Click the toolbar icon to inject on arbitrary pages.",
+  "version": "1.2",
+  "description": "Lightweight MV3 helper UI for Twine/SugarCube.",
   "manifest_version": 3,
-  "action": {
-    "default_title": "TwineForge"
-  },
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage"
-  ],
-  "host_permissions": [
-    "file:///*",
-    "http://localhost/*",
-    "http://127.0.0.1/*"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "twinehacker.js",
-        "twinehacker.css",
-        "show-custom-globals.js",
-        "Icons/*",
-        "Skins/*"
-      ],
-      "matches": [
-        "file:///*",
-        "http://localhost/*",
-        "http://127.0.0.1/*"
-      ]
-    }
-  ],
-  "icons": {
-    "16": "Icons/16.png",
-    "48": "Icons/48.png",
-    "128": "Icons/128.png"
-  },
+  "action": { "default_title": "TwineForge" },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["file:///*", "http://localhost/*", "http://127.0.0.1/*"],
+  "background": { "service_worker": "background.js" },
+  "web_accessible_resources": [{
+    "resources": ["twinehacker.js", "twinehacker.css", "show-custom-globals.js", "Icons/*", "Skins/*"],
+    "matches": ["file:///*", "http://localhost/*", "http://127.0.0.1/*"]
+  }],
+  "icons": { "16": "Icons/16.png", "48": "Icons/48.png", "128": "Icons/128.png" },
   "commands": {
     "enable_twine_hacker": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+H"
-      },
-      "description": "Inject TwineForge panel (requires active tab permission; use icon if not working)"
+      "suggested_key": { "default": "Ctrl+Shift+H" },
+      "description": "Inject TwineForge panel"
     },
-    "show_custom_globals": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+K"
-      },
-      "description": "List non-default globals in console (may require clicking icon first)"
+    "reset_panel_geometry": {
+      "suggested_key": { "default": "Ctrl+Shift+R" },
+      "description": "Reset TwineForge window position and size"
     }
   }
 }

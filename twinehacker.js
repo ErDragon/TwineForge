@@ -1,7 +1,7 @@
 
 
 // === TwineForge meta ===
-const TF_VERSION = '1.1'; // keep in sync with manifest.json.version
+const TF_VERSION = '1.2'; // keep in sync with manifest.json.version
 // TwineForge — clean build: pins, skinsbar, drag+resize, fixed Open/unpin
 (function(){try{if(typeof window.cont!=='function'){window.cont=function(){return document.getElementById('VarStateContainer');};}}catch(e){}})();
 function initFailed (msg){ alert("Failed to load TwineForge. Reason: " + msg); }
@@ -179,7 +179,6 @@ else {
         const val=row.querySelector('.var-input')?.value||'';
         const match= ql==='' ? true : (key+' '+val).toLowerCase().includes(ql);
         row.style.display = match ? '' : 'none'; row.classList.toggle('th-match', match && ql!=='');
-    installUpdateChecker(head);
       });
       if(ql){ $$(el,'.var-type-object').forEach(s=>s.classList.add('properties-open')); }
       clearCurrent(); findState.list = ql ? collectMatches() : []; findState.idx  = findState.list.length ? 0 : -1; if(findState.idx>=0) focusMatch(0);
@@ -187,6 +186,7 @@ else {
     search?.addEventListener('input',e=>applyFilter(e.target.value));
     prevBtn?.addEventListener('click',()=>focusMatch(-1));
     nextBtn?.addEventListener('click',()=>focusMatch(+1));
+    installUpdateChecker(head);
     el.addEventListener('click', (ev)=>{
       const t = ev.target.closest('.var-type-object > .var-title');
       if (!t || !el.contains(t)) return;
@@ -496,12 +496,12 @@ function installUpdateChecker(head){
   if (!btn || !badge) return;
 
   function setBadge(kind, text){
-  badge.style.display='';
-  badge.textContent=text;
-  badge.classList.remove('ok','new','err');
-  badge.classList.add(kind);
-  try{ btn.classList.toggle('new', kind==='new'); }catch(e){}
-}
+    badge.style.display = '';
+    badge.textContent = text;
+    badge.classList.remove('ok','new','err');
+    badge.classList.add(kind);
+      try{ btn.classList.toggle('new', kind==='new'); }catch(e){}
+  }
 
   function cmpSemver(a,b){
     const pa = String(a||'').split('.').map(n=>parseInt(n||'0',10));
@@ -513,13 +513,37 @@ function installUpdateChecker(head){
     return 0;
   }
 
-  async function fetchRemoteVersion(){
-    const url = 'https://raw.githubusercontent.com/ErDragon/TwineForge/main/manifest.json';
-    const res = await fetch(url, { cache: 'no-store' });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const j = await res.json();
-    return j && j.version ? j.version : null;
-  }
+  
+async function fetchRemoteVersion(){
+  // 1) Try raw manifest on main
+  try{
+    const raw = 'https://raw.githubusercontent.com/ErDragon/TwineForge/main/manifest.json';
+    const res = await fetch(raw, { cache: 'no-store' });
+    if(res.ok){
+      const j = await res.json();
+      if (j && j.version) { console.log('[TwineForge] Remote version (raw):', j.version); return j.version; }
+    } else {
+      console.warn('[TwineForge] RAW fetch failed:', res.status);
+    }
+  }catch(e){ console.warn('[TwineForge] RAW fetch error:', e); }
+  // 2) Fallback: GitHub releases/latest tag_name (strip optional leading v)
+  try{
+    const api = 'https://api.github.com/repos/ErDragon/TwineForge/releases/latest';
+    const r2 = await fetch(api, { cache: 'no-store' });
+    if (r2.ok){
+      const j2 = await r2.json();
+      let tag = (j2 && (j2.tag_name || j2.name)) || null;
+      if (tag){
+        tag = String(tag).replace(/^v/i,'').trim();
+        console.log('[TwineForge] Remote version (releases):', tag);
+        return tag;
+      }
+    } else {
+      console.warn('[TwineForge] API fetch failed:', r2.status);
+    }
+  }catch(e){ console.warn('[TwineForge] API fetch error:', e); }
+  return null;
+}
 
   async function runCheck(){
     try{
@@ -530,41 +554,44 @@ function installUpdateChecker(head){
       if(rel>0){
         setBadge('new', 'v'+remote);
         btn.title = 'Update available: v'+remote+' (click to open releases)';
+        try{ const m=document.getElementById('th-footer-msg'); if(m) m.textContent = 'New version is available! Click ForgeLink to download it.'; }catch(e){}
         btn.dataset.updateUrl = 'https://github.com/ErDragon/TwineForge/releases';
+        try{const f=document.getElementById('th-footer'); if(f){ f.classList.add('show'); f.style.display=''; }}catch(e){}
       } else {
         setBadge('ok', 'Up to date');
         btn.title = 'Latest version installed (v'+TF_VERSION+')';
         btn.dataset.updateUrl = '';
+        try{const f=document.getElementById('th-footer'); if(f){ f.classList.remove('show'); f.style.display='none'; }}catch(e){}
       }
     }catch(e){
       setBadge('err','Offline');
       btn.title = 'Update check failed: '+(e && e.message ? e.message : e);
       btn.dataset.updateUrl = '';
+        try{const f=document.getElementById('th-footer'); if(f){ f.classList.remove('show'); f.style.display='none'; }}catch(e){}
     }
   }
 
   btn.addEventListener('click', ()=>{
-    if (btn.dataset.updateUrl){
-      try{ window.open(btn.dataset.updateUrl, '_blank', 'noopener'); }catch(e){}
-    } else {
-      runCheck();
-    }
-  });
+  // Shift+Click opens releases, normal click downloads ZIP
+  if (btn.dataset.updateUrl && !window.event?.shiftKey){ thDownloadLatestZip(); return; }
+  if (btn.dataset.updateUrl && window.event?.shiftKey){ try{ window.open(btn.dataset.updateUrl,'_blank','noopener'); }catch(e){} return; }
+  runCheck();
+});
 
-
+  
   // Create update footer if not exists
   let footer = document.getElementById('th-footer');
   if (!footer) {
     footer = document.createElement('div');
     footer.id = 'th-footer';
-    footer.innerHTML = `<span class="msg">New version is available! Click <b>ForgeLink</b> to download it.</span>`;
+    footer.innerHTML = `<span class="msg" id="th-footer-msg">New version is available! Click <b>ForgeLink</b> to download it.</span>`;
     const cont = document.getElementById('VarStateContainer');
     if (cont) cont.appendChild(footer);
     footer.style.display = 'none';
   }
-
   runCheck();
 }
+
 
 /* Pinned system */
   function ensurePinnedSection(){
@@ -916,4 +943,107 @@ document.addEventListener('keydown', (e) => {
       console.log("TwineForge panel position reset.");
     } catch (err) { console.error("Failed to reset TwineForge position:", err); }
   }
+});
+
+
+// ===== Toast helper =====
+
+function thShowToast(msg, kind='ok', ms=0){
+  try{
+    let host = document.getElementById('th-toast');
+    if(!host){
+      host = document.createElement('div');
+      host.id = 'th-toast';
+      const cont = document.getElementById('VarStateContainer');
+      if (cont) cont.appendChild(host);
+    }
+    host.innerHTML =
+  '<div class="th-toast-msg '+kind+'">' +
+    '<span class="th-toast-text"></span>' +     
+    '<span class="th-toast-close" title="Dismiss">×</span>' +
+  '</div>';
+
+const textEl = host.querySelector('.th-toast-text');
+if (textEl) textEl.textContent = msg;
+    host.style.display = 'block';
+    const x = host.querySelector('.th-toast-close');
+    if (x) x.addEventListener('click', ()=>{ host.style.display='none'; });
+    if(ms>0){ setTimeout(()=>{ host.style.display='none'; }, ms); }
+  }catch(e){ console.warn('[TwineForge] toast failed', e); }
+}
+
+
+
+// ===== Download latest ZIP from GitHub main =====
+
+async function thDownloadLatestZip(){
+  // Use GitHub archive URL via hidden iframe to avoid CORS and trigger browser download
+  const zipUrl = 'https://github.com/ErDragon/TwineForge/archive/refs/heads/main.zip';
+  try{
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = zipUrl;
+    document.body.appendChild(iframe);
+    setTimeout(()=>{ try{ iframe.remove(); }catch(e){} }, 15000);
+    thShowToast('Download completed! Unpack the ZIP and replace the old TwineForge files in your extension folder, then refresh the tab or click "Reload" in chrome://extensions', 'ok', 0);
+  }catch(e){
+    thShowToast('Download failed: '+(e && e.message ? e.message : e), 'err', 0);
+  }
+}
+
+
+// ===== Hotkeys: Inject UI (Ctrl+Shift+H) and List Globals (Ctrl+Shift+K) =====
+
+// Try to (re)inject TwineForge UI if missing, otherwise focus/bring to top
+function thInjectUI(){
+  try{
+    let root = document.getElementById('VarStateContainer');
+    if (!root){
+      if (typeof SugarCube === 'undefined') { alert('TwineForge: SugarCube not found'); return; }
+      const state = SugarCube.state || SugarCube.State;
+      if (!state || !state.active || !state.active.variables){ alert('TwineForge: game state not ready yet'); return; }
+      root = document.createElement('div');
+      root.id = 'VarStateContainer';
+      const gameStateDOM = objectToDOM(state.active.variables, 'Gamestate', 'Gamestate');
+      root.appendChild(gameStateDOM);
+      gameStateDOM.addEventListener('propertyChange', function(e){
+        var parentObj = getActiveStateVariables();
+        var keyArr = e.detail.key.split('.');
+        for(var i = 1; i < (keyArr.length - 1); i++) { parentObj = parentObj[keyArr[i]]; }
+        updateDOMValues = false; clearTimeout(updateDOMValuesInterval); updateDOMValuesInterval = setTimeout(function(){ updateDOMValues = true; }, 250);
+        parentObj[keyArr[keyArr.length - 1]] = e.detail.value;
+      });
+      document.body.appendChild(root);
+      // run observers + header + pins etc.
+      try{ (function(){ const evt = new Event('DOMContentLoaded'); document.dispatchEvent(evt); })(); }catch(e){}
+    }
+    // show + bring to top
+    root.style.display = '';
+    root.style.visibility = 'visible';
+    root.focus && root.focus();
+    try{ root.style.zIndex = '2147483647'; }catch(e){}
+  }catch(err){ console.warn('thInjectUI failed', err); }
+}
+
+// List "custom globals" -> prefer helper if present, else list game variables as fallback
+function thListCustomGlobals(){
+  try{
+    if (typeof TH_showCustomGlobals === 'function'){ TH_showCustomGlobals(); return; }
+  }catch(e){}
+  try{
+    const vars = getActiveStateVariables ? getActiveStateVariables() : (window.State && State.variables) || {};
+    const out = Object.keys(vars).map(k => ({ name: k, value: vars[k] }));
+    console.group('%cTwineForge – Variables','font-weight:bold;color:#8ff;');
+    console.table(out);
+    console.groupEnd();
+  }catch(e){ console.log('TwineForge: no variables available yet.'); }
+}
+
+// Global hotkeys
+document.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey && e.shiftKey)) return;
+  const key = (e.key || '').toLowerCase();
+  if (key === 'h'){ e.preventDefault(); thInjectUI(); }
+  else if (key === 'k'){ e.preventDefault(); thListCustomGlobals(); }
+  // 'r' handler is defined above and remains active
 });
