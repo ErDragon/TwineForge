@@ -1,0 +1,13 @@
+/* Terminal Green */
+#VarStateContainer.skin-terminal-green{ background:#060a06; border-color:#1e2a1e; color:#c9ffbf; }
+#VarStateContainer.skin-terminal-green #th-header{ background:linear-gradient(180deg,#091109,#070e07); border-bottom-color:#263626; }
+#VarStateContainer.skin-terminal-green #th-btns button,
+#VarStateContainer.skin-terminal-green #th-skinsbar select,
+#VarStateContainer.skin-terminal-green #th-skinsbar button{ background:#0a130a; border-color:#263626; color:#b6ffad; }
+#VarStateContainer.skin-terminal-green .var-field{ border-bottom-color:#0f1a0f; }
+#VarStateContainer.skin-terminal-green .var-input{ background:#071107; color:#dbffd4; border:1px solid #284128; }
+#VarStateContainer.skin-terminal-green .var-input:focus{ border-color:#4dff4d; box-shadow:0 0 0 2px rgba(77,255,77,.18); }
+#VarStateContainer.skin-terminal-green .th-match{ background:rgba(77,255,77,.10); }
+#VarStateContainer.skin-terminal-green .th-current{ outline-color:rgba(77,255,77,.55); }
+#VarStateContainer.skin-terminal-green .var-type-object{ background:#070e07; border-color:#1b2a1b; }
+#VarStateContainer.skin-terminal-green .var-type-object .var-properties{ background:#081108; border-color:#1b2a1b; }

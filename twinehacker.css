@@ -1,0 +1,160 @@
+
+/* TwineForge — compact, isolated styles with skins bar inside header */
+
+/* Isolation */
+#VarStateContainer, #VarStateContainer * { box-sizing: border-box; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+/* Shell */
+#VarStateContainer{
+  position: fixed;
+  top: 12px; right: 12px; left: auto;
+  width: 520px; height: 560px;
+  max-width: min(92vw, 900px);
+  max-height: min(92vh, 900px);
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid #2a2e37;
+  background: #0b0c0f;
+  color: #e7e7ea;
+  box-shadow: 0 12px 30px rgba(0,0,0,.55);
+  z-index: 2147483647 !important;
+}
+
+/* Header */
+#VarStateContainer #th-header{
+  position: sticky; top: 0; z-index: 10;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 10px;
+  margin: -6px -6px 0 -6px;
+  background: #0f1116;
+  border-bottom: 1px solid #2a2e37;
+  border-top-left-radius: 12px; border-top-right-radius: 12px;
+}
+#VarStateContainer #th-title{ font-weight: 700; letter-spacing:.3px; font-size: 12px; color:#f0f0f3; padding-left: 6px; }
+#VarStateContainer #th-search-wrap{ display:flex; align-items:center; gap:6px; min-width: 240px; }
+
+/* Controls */
+#VarStateContainer input[type="search"],
+#VarStateContainer input[type="text"],
+#VarStateContainer input[type="number"],
+#VarStateContainer select,
+#VarStateContainer button{
+  -webkit-appearance: none; appearance: none;
+  background:#151a22; border:1px solid #2b3140; color:#cfd3dc;
+  padding:8px 10px; border-radius:10px; font-size: 12px; outline: none;
+}
+#VarStateContainer input::placeholder{ color:#7f8799; }
+#VarStateContainer button{ cursor:pointer; }
+#VarStateContainer button:hover{ background:#1a2130; border-color:#3b4257; }
+
+/* Header skins bar */
+#VarStateContainer #th-skinsbar{
+  grid-column: 1 / -1;
+  display:flex; align-items:center; gap:8px;
+  padding: 8px 10px 8px 10px;
+  margin: 8px 0 0 0;
+  border-top: 2px solid #2a2e37;
+}
+#VarStateContainer #th-skinsbar .label{ color:#aeb9cc; font-weight:600; }
+
+/* Sections */
+#VarStateContainer .var-type-object{
+  border: 1px solid #222; padding: 10px; margin: 10px; border-radius: 10px; background:#0a0b10;
+}
+#VarStateContainer .var-type-object > .var-title{
+  font-weight:600; display:block; margin-bottom:8px; color:#d6dae3; cursor:pointer; position:relative; padding-right:28px;
+}
+
+/* Pin button */
+#VarStateContainer .th-pin{
+  background:#151a22; border:1px solid #2b3140; color:#cfd3dc;
+  border-radius:8px; font-size:12px; height:24px; min-width:24px;
+  padding:0 6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+  background:#151a22; border:1px solid #2b3140; color:#cfd3dc;
+  padding:2px 6px; border-radius:8px; font-size: 12px; cursor:pointer;
+}
+#VarStateContainer .th-pin.active{ background:#26314a; border-color:#3d4a6e; }
+
+/* Properties collapse */
+#VarStateContainer .var-type-object .var-properties{
+  position: relative; background:#0b0b0f; border:1px solid #2a2e37; padding: 8px;
+  overflow: hidden; max-height: 0; transition: max-height .18s ease; border-radius: 8px;
+}
+#VarStateContainer .var-type-object.properties-open .var-properties{ overflow: auto; max-height: 1200px; }
+
+/* Field rows */
+#VarStateContainer .var-field{
+  display: grid; grid-template-columns: 42% 58%;
+  gap: 8px; align-items: center;
+  padding: 6px 6px; margin: 4px 0;
+  border-bottom: 1px solid #171a21; border-radius: 8px;
+}
+#VarStateContainer .var-title{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color:#aeb9cc; position:relative; padding-right: 44px; 
+  min-height: 32px;
+  line-height: 32px;}
+#VarStateContainer .var-input{
+  width: 100%; min-height: 30px;
+  background:#0d1117; color:#e8e8ea; border:1px solid #2a2e37; border-radius:10px;
+  padding: 6px 8px; outline:none; display:block;
+}
+#VarStateContainer .var-input:focus{ border-color:#4a6cff; box-shadow:0 0 0 2px rgba(74,108,255,.15); }
+#VarStateContainer .var-input.value-changed{ outline: 1px dashed #f0c73b; background:#1f1a05; }
+
+/* Pinned tweaks */
+#TH-PINNED .var-field .var-value{ display:flex; gap:8px; align-items:center; }
+#TH-PINNED .var-field .var-input{ flex: 1 1 auto; min-width: 0; }
+
+/* Search highlight */
+#VarStateContainer .th-match{ background: rgba(74,108,255,.10); border-radius: 8px; }
+#VarStateContainer .th-current{ outline:2px solid rgba(74,108,255,.6); border-radius:8px; }
+
+/* Resize cursors */
+#VarStateContainer.th-resize-e, #VarStateContainer.th-resize-w { cursor: ew-resize; }
+#VarStateContainer.th-resize-n, #VarStateContainer.th-resize-s { cursor: ns-resize; }
+#VarStateContainer.th-resize-ne { cursor: nesw-resize; }
+#VarStateContainer.th-resize-nw { cursor: nwse-resize; }
+#VarStateContainer.th-resize-se { cursor: nwse-resize; }
+#VarStateContainer.th-resize-sw { cursor: nesw-resize; }
+
+/* Scrollbars */
+#VarStateContainer::-webkit-scrollbar{ width: 10px; }
+#VarStateContainer::-webkit-scrollbar-thumb{ background:#2a2e37; border-radius:10px; }
+
+
+#VarStateContainer .var-title .th-pin{ position:absolute; right:6px; top:50%; transform:translateY(-50%); }
+#VarStateContainer .var-value .th-pin{ position: static; transform:none; margin-left:6px; }
+#VarStateContainer #th-skinsbar select,
+#VarStateContainer #th-skinsbar button{
+  height: 28px;
+  padding: 0 10px;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+}
+#VarStateContainer #th-skinsbar .label{ font-size:13px; }
+
+#VarStateContainer .var-type-object .var-properties:empty {
+  background: #551515;
+  border: 1px solid #993333;
+  min-height: 32px;
+}
+
+#VarStateContainer .var-type-object.properties-open .var-properties:empty {
+  background: #551515;
+  border: 1px solid #993333;
+  min-height: 32px;
+}
+
+#VarStateContainer .th-find-nav button {
+  margin-right: 8px;
+}
+
+#VarStateContainer .th-find-nav button:last-child {
+  margin-right: 0;
+}
+
+#VarStateContainer .var-type-object.properties-open > .var-properties{
+  max-height: 10000px !important;
+}

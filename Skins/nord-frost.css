@@ -1,0 +1,13 @@
+/* Nord Frost */
+#VarStateContainer.skin-nord-frost{ background:#0b0e11; border-color:#2c3540; color:#e6eef5; }
+#VarStateContainer.skin-nord-frost #th-header{ background:linear-gradient(180deg,#0f1318,#0c1015); border-bottom-color:#313c4a; }
+#VarStateContainer.skin-nord-frost #th-btns button,
+#VarStateContainer.skin-nord-frost #th-skinsbar select,
+#VarStateContainer.skin-nord-frost #th-skinsbar button{ background:#11161c; border-color:#313c4a; color:#dfe9f2; }
+#VarStateContainer.skin-nord-frost .var-field{ border-bottom-color:#151b22; }
+#VarStateContainer.skin-nord-frost .var-input{ background:#0e141a; color:#eef6ff; border:1px solid #334052; }
+#VarStateContainer.skin-nord-frost .var-input:focus{ border-color:#89b4fa; box-shadow:0 0 0 2px rgba(137,180,250,.20); }
+#VarStateContainer.skin-nord-frost .th-match{ background:rgba(137,180,250,.12); }
+#VarStateContainer.skin-nord-frost .th-current{ outline-color:rgba(137,180,250,.60); }
+#VarStateContainer.skin-nord-frost .var-type-object{ background:#0c1016; border-color:#263141; }
+#VarStateContainer.skin-nord-frost .var-type-object .var-properties{ background:#0d1218; border-color:#263141; }

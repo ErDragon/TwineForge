@@ -1,0 +1,13 @@
+/* Amber Glow */
+#VarStateContainer.skin-amber-glow{ background:#0b0906; border-color:#3a2d1e; color:#ffe9cc; }
+#VarStateContainer.skin-amber-glow #th-header{ background:linear-gradient(180deg,#140f09,#0f0b07); border-bottom-color:#4a3724; }
+#VarStateContainer.skin-amber-glow #th-btns button,
+#VarStateContainer.skin-amber-glow #th-skinsbar select,
+#VarStateContainer.skin-amber-glow #th-skinsbar button{ background:#14100b; border-color:#4a3724; color:#ffe1b8; }
+#VarStateContainer.skin-amber-glow .var-field{ border-bottom-color:#1b140e; }
+#VarStateContainer.skin-amber-glow .var-input{ background:#0f0b08; color:#fff2d9; border:1px solid #5a4026; }
+#VarStateContainer.skin-amber-glow .var-input:focus{ border-color:#ffb24a; box-shadow:0 0 0 2px rgba(255,178,74,.20); }
+#VarStateContainer.skin-amber-glow .th-match{ background:rgba(255,178,74,.12); }
+#VarStateContainer.skin-amber-glow .th-current{ outline-color:rgba(255,178,74,.55); }
+#VarStateContainer.skin-amber-glow .var-type-object{ background:#0f0b07; border-color:#3c2b1d; }
+#VarStateContainer.skin-amber-glow .var-type-object .var-properties{ background:#120e09; border-color:#3c2b1d; }
