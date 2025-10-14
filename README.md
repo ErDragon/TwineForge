@@ -28,8 +28,3 @@ Updated for Manifest V3 and modern browsers.
 - Any allowed redistributions must keep attribution and must NOT contain malware or monetization.  
 
 For permission requests, contact: `makiteusz565r6@gmail.com`.
-
-
-## 1.3-min — Added Minimize/Maximize
-- New `Minimize` button in header that collapses TwineForge to a tiny bar with `Maximize`.
-- State is remembered across reloads.

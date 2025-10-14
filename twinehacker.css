@@ -161,7 +161,7 @@
 
 
 /* ===== ForgeLink (Update Checker) ===== */
-#VarStateContainer #th-right{ display:flex; justify-content:flex-end; align-items:center; }
+#VarStateContainer #th-right{ display:flex; justify-content:flex-end; align-items:center; gap:12px; }
 #VarStateContainer #th-update{ display:flex; align-items:center; gap:8px; }
 #VarStateContainer #th-update-check{
   background:#151a22; border:1px solid #2b3140; color:#cfd3dc;
@@ -341,7 +341,13 @@
 
 
 
-/* Header right block spacing (ForgeLink / badge / Minimize) */
-#VarStateContainer #th-right{ gap: 12px; }
-#VarStateContainer #th-update{ gap: 10px; } /* slightly more breathing room inside the group */
+/* Minimized: never show update footer; also disable resize cursors while minimized */
+#VarStateContainer.th-min #th-footer { display: none !important; }
+#VarStateContainer.th-min { cursor: default; }
+
+
+
+/* Mini bar centering + spacing */
+#VarStateContainer .th-mini{ padding: 10px 12px; gap: 10px; }
+#VarStateContainer .th-mini .label{ padding-left: 2px; }
 

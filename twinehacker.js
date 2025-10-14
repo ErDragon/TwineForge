@@ -1,7 +1,7 @@
 
 
 // === TwineForge meta ===
-const TF_VERSION = '1.3'; // keep in sync with manifest.json.version
+const TF_VERSION = '1.4'; // keep in sync with manifest.json.version
 // TwineForge — clean build: pins, skinsbar, drag+resize, fixed Open/unpin
 (function(){try{if(typeof window.cont!=='function'){window.cont=function(){return document.getElementById('VarStateContainer');};}}catch(e){}})();
 function initFailed (msg){ alert("Failed to load TwineForge. Reason: " + msg); }
@@ -133,14 +133,7 @@ else {
 
   
   /* ===== Minimize / Maximize ===== */
-  const LS_MIN = 'th-min';
-  function isMinimized(){
-    try{ return localStorage.getItem(LS_MIN) === '1'; }catch(e){ return false; }
-  }
-  function setMinimized(flag){
-    try{ if(flag) localStorage.setItem(LS_MIN,'1'); else localStorage.removeItem(LS_MIN); }catch(e){}
-  }
-  
+
   function installMiniDrag(mini){
     if (!mini || mini.dataset.dragInit==='1') return;
     mini.dataset.dragInit='1';
@@ -177,6 +170,13 @@ else {
     });
   }
 
+  const LS_MIN = 'th-min';
+  function isMinimized(){
+    try{ return localStorage.getItem(LS_MIN) === '1'; }catch(e){ return false; }
+  }
+  function setMinimized(flag){
+    try{ if(flag) localStorage.setItem(LS_MIN,'1'); else localStorage.removeItem(LS_MIN); }catch(e){}
+  }
   function ensureMiniBar(){
     const el = cont(); if(!el) return null;
     let mini = el.querySelector('.th-mini');
@@ -200,12 +200,23 @@ else {
     onTop(el);
   }
   function restorePanel(){
+  /* re-eval footer after restore */
+
     const el=cont(); if(!el) return;
     setMinimized(false);
     el.classList.remove('th-min');
     const mini = el.querySelector('.th-mini');
     if(mini) mini.remove();
     centerIfNeeded();
+    try{
+      const f=document.getElementById('th-footer');
+      const head=document.getElementById('th-header');
+      const btn=head && head.querySelector ? head.querySelector('#th-update-check') : null;
+      if(f){
+        if(btn && btn.classList && btn.classList.contains('new')){ f.classList.add('show'); f.style.display=''; }
+        else { f.classList.remove('show'); f.style.display='none'; }
+      }
+    }catch(e){}
     onTop(el);
   }
 
@@ -856,7 +867,7 @@ async function fetchRemoteVersion(){
     const header=el.querySelector('#th-header');
     let dragging=false,sx=0,sy=0,sl=0,st=0;
     if(header){
-      header.addEventListener('mousedown',(e)=>{
+      header.addEventListener('mousedown',(e)=>{ if(cont().classList.contains('th-min')) return;
         if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.tagName==='SELECT') return;
         dragging=true; sx=e.clientX; sy=e.clientY; const r=el.getBoundingClientRect(); sl=r.left; st=r.top;
         el.style.right='auto'; document.body.style.userSelect='none'; onTop(el);
