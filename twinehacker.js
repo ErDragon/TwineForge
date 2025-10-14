@@ -1,7 +1,7 @@
 
 
 // === TwineForge meta ===
-const TF_VERSION = '1.2'; // keep in sync with manifest.json.version
+const TF_VERSION = '1.3'; // keep in sync with manifest.json.version
 // TwineForge — clean build: pins, skinsbar, drag+resize, fixed Open/unpin
 (function(){try{if(typeof window.cont!=='function'){window.cont=function(){return document.getElementById('VarStateContainer');};}}catch(e){}})();
 function initFailed (msg){ alert("Failed to load TwineForge. Reason: " + msg); }
@@ -33,6 +33,12 @@ function trackChanges(oldVariablesJson){
 }
 
 var objectToDOM = (function(){
+    function _tfSanToken(s){
+      s = (''+s).trim().replace(/[^a-zA-Z0-9\-_]/g,'-');
+      if(!/^[a-zA-Z_\-]/.test(s)) s = 't-' + s; // cannot start with digit
+      return s || 't';
+    }
+
   function objectToDOM(obj, key, ref){
     var _parent = document.createElement('div'); _parent.classList.add('var-type-object');
     var _title = document.createElement('span'); _title.classList.add('var-title'); _title.innerText = key;
@@ -48,7 +54,7 @@ var objectToDOM = (function(){
     var _parent = document.createElement('div'); _parent.classList.add('var-field','var-type-number');
     var _title = document.createElement('span'); _title.classList.add('var-title'); _title.innerText = key;
     var _input = document.createElement('input'); _input.classList.add('var-input'); _input.setAttribute('type', 'number'); _input.setAttribute('data-ref', ref); _input.value = num;
-    var refArr = ref.split("."); for(var k in refArr){ _input.classList.add(refArr[k]); }
+    var refArr = ref.split('.'); for(var k in refArr){ _input.classList.add('ref-' + _tfSanToken(refArr[k])); }
     _parent.appendChild(_title); _parent.appendChild(_input);
     function inputHandler(e){ e.stopPropagation(); var value = parseFloat(_input.value); var event = new CustomEvent('propertyChange', { detail: {key: key, value: value }, bubbles: true}); _input.dispatchEvent(event); }
     _input.addEventListener('keyup', inputHandler); _input.addEventListener('change', inputHandler); return _parent;
@@ -57,7 +63,7 @@ var objectToDOM = (function(){
     var _parent = document.createElement('div'); _parent.classList.add('var-field','var-type-text');
     var _title = document.createElement('span'); _title.classList.add('var-title'); _title.innerText = key;
     var _input = document.createElement('input'); _input.classList.add('var-input'); _input.setAttribute('type', 'text'); _input.setAttribute('data-ref', ref); _input.value = str;
-    var refArr = ref.split("."); for(var k in refArr){ _input.classList.add(refArr[k]); }
+    var refArr = ref.split('.'); for(var k in refArr){ _input.classList.add('ref-' + _tfSanToken(refArr[k])); }
     _parent.appendChild(_title); _parent.appendChild(_input);
     function inputHandler(e){ e.stopPropagation(); var event = new CustomEvent('propertyChange', { detail: {key: key, value: _input.value }}); _input.dispatchEvent(event); }
     _input.addEventListener('keyup', inputHandler); _input.addEventListener('change', inputHandler); return _parent;
@@ -125,6 +131,84 @@ else {
   function findFieldByRef(ref){ const root=cont(); if(!root) return null; for(const f of $$(root,'.var-field')){ if(refForField(f)===ref) return f; } return null; }
   function findSectionByRef(ref){ const root=cont(); if(!root) return null; for(const s of $$(root,'.var-type-object')){ if(refForSection(s)===ref) return s; } return null; }
 
+  
+  /* ===== Minimize / Maximize ===== */
+  const LS_MIN = 'th-min';
+  function isMinimized(){
+    try{ return localStorage.getItem(LS_MIN) === '1'; }catch(e){ return false; }
+  }
+  function setMinimized(flag){
+    try{ if(flag) localStorage.setItem(LS_MIN,'1'); else localStorage.removeItem(LS_MIN); }catch(e){}
+  }
+  
+  function installMiniDrag(mini){
+    if (!mini || mini.dataset.dragInit==='1') return;
+    mini.dataset.dragInit='1';
+    let dragging=false, sx=0, sy=0, sl=0, st=0;
+    const root = cont();
+    if(!root) return;
+    mini.addEventListener('mousedown',(e)=>{
+      const maxBtn = mini.querySelector('#th-maximize');
+      if (maxBtn && (e.target===maxBtn || (maxBtn.contains && maxBtn.contains(e.target)))) return;
+      dragging=true; sx=e.clientX; sy=e.clientY;
+      const r=root.getBoundingClientRect(); sl=r.left; st=r.top;
+      root.style.right='auto';
+      document.body.style.userSelect='none';
+      onTop(root);
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove',(e)=>{
+      if(!dragging) return;
+      let nx=sl+(e.clientX-sx), ny=st+(e.clientY-sy);
+      const w=root.getBoundingClientRect().width, h=root.getBoundingClientRect().height;
+      nx=Math.max(8, Math.min(window.innerWidth - w - 8, nx));
+      ny=Math.max(8, Math.min(window.innerHeight - h - 8, ny));
+      root.style.left=nx+'px'; root.style.top=ny+'px';
+    });
+    window.addEventListener('mouseup',()=>{
+      if(!dragging) return;
+      dragging=false;
+      document.body.style.userSelect='';
+      try{
+        const r=root.getBoundingClientRect();
+        localStorage.setItem('th-left', String(Math.round(r.left)));
+        localStorage.setItem('th-top', String(Math.round(r.top)));
+      }catch(e){}
+    });
+  }
+
+  function ensureMiniBar(){
+    const el = cont(); if(!el) return null;
+    let mini = el.querySelector('.th-mini');
+    if(!mini){
+      mini = document.createElement('div');
+      mini.className = 'th-mini';
+      mini.innerHTML = '<span class="label">TwineForge</span><button id="th-maximize" title="Maximize">Maximize</button>';
+      el.appendChild(mini);
+      const maxBtn = mini.querySelector('#th-maximize');
+      maxBtn.addEventListener('click', () => { restorePanel(); });
+      installMiniDrag(mini);
+    }
+    installMiniDrag(mini);
+    return mini;
+  }
+  function minimizePanel(){
+    const el=cont(); if(!el) return;
+    setMinimized(true);
+    el.classList.add('th-min');
+    ensureMiniBar();
+    onTop(el);
+  }
+  function restorePanel(){
+    const el=cont(); if(!el) return;
+    setMinimized(false);
+    el.classList.remove('th-min');
+    const mini = el.querySelector('.th-mini');
+    if(mini) mini.remove();
+    centerIfNeeded();
+    onTop(el);
+  }
+
   /* header + skins bar */
   function ensureHeader(){
     const el=cont(); if(!el) return;
@@ -155,7 +239,8 @@ else {
   updWrap.appendChild(updBtn);
   updWrap.appendChild(badge);
   right.appendChild(updWrap);
-  head.appendChild(right);
+  const minBtn = document.createElement('button'); minBtn.id='th-minimize'; minBtn.title='Minimize'; minBtn.textContent='Minimize'; right.appendChild(minBtn);
+head.appendChild(right);
   head.appendChild(title); head.appendChild(sw); el.insertBefore(head, el.firstChild); wireHeader(head);
     } else if(!head.dataset.wired){ wireHeader(head); }
     ensureSkinsBar(head);
@@ -166,6 +251,8 @@ else {
     const search=head.querySelector('#th-search');
     const prevBtn=head.querySelector('#th-prev');
     const nextBtn=head.querySelector('#th-next');
+    const minBtn=head.querySelector('#th-minimize');
+
     let findState={q:'', list:[], idx:-1};
     function clearCurrent(){ el.querySelectorAll('.th-current').forEach(x=>x.classList.remove('th-current')); }
     function collectMatches(){ const out=[]; el.querySelectorAll('.var-field').forEach(row=>{ if(row.style.display!== 'none' && row.classList.contains('th-match')) out.push(row); }); return out; }
@@ -186,7 +273,12 @@ else {
     search?.addEventListener('input',e=>applyFilter(e.target.value));
     prevBtn?.addEventListener('click',()=>focusMatch(-1));
     nextBtn?.addEventListener('click',()=>focusMatch(+1));
-    installUpdateChecker(head);
+    
+    // Minimize toggle
+    minBtn?.addEventListener('click', ()=> minimizePanel());
+    // Apply minimized state (in case of reload)
+    if(isMinimized()){ minimizePanel(); }
+installUpdateChecker(head);
     el.addEventListener('click', (ev)=>{
       const t = ev.target.closest('.var-type-object > .var-title');
       if (!t || !el.contains(t)) return;
@@ -1014,6 +1106,7 @@ function thInjectUI(){
         parentObj[keyArr[keyArr.length - 1]] = e.detail.value;
       });
       document.body.appendChild(root);
+      try{ if(isMinimized()){ minimizePanel(); } }catch(e){}
       // run observers + header + pins etc.
       try{ (function(){ const evt = new Event('DOMContentLoaded'); document.dispatchEvent(evt); })(); }catch(e){}
     }

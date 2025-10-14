@@ -290,3 +290,58 @@
   line-height: 1.4;
   text-align: left;
 }
+
+
+/* ===== Minimize / Maximize ===== */
+#VarStateContainer.th-min{
+  width: auto !important;
+  height: auto !important;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+#VarStateContainer.th-min > *:not(.th-mini){ display: none !important; }
+#VarStateContainer .th-mini{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #2b3140;
+  background: #0f1116;
+  color: #cfd3dc;
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  user-select: none;
+}
+#VarStateContainer .th-mini .label{
+  font-weight: 700;
+  opacity: .9;
+}
+#VarStateContainer .th-mini #th-maximize{
+  -webkit-appearance: none; appearance: none;
+  background:#151a22; border:1px solid #2b3140; color:#cfd3dc;
+  padding:6px 10px; border-radius:10px; font-size:12px; cursor:pointer;
+}
+#VarStateContainer .th-mini #th-maximize:hover{
+  background:#1a2130; border-color:#3b4257;
+}
+
+
+/* Minimized: hide any skin watermark/logo and header banner */
+#VarStateContainer.th-min::before { content: none !important; display: none !important; }
+#VarStateContainer.th-min #th-header .th-banner { display: none !important; }
+/* Minibar drag affordance */
+#VarStateContainer .th-mini { cursor: move; }
+#VarStateContainer .th-mini #th-maximize { cursor: pointer; }
+
+
+
+/* Header right block spacing (ForgeLink / badge / Minimize) */
+#VarStateContainer #th-right{ gap: 12px; }
+#VarStateContainer #th-update{ gap: 10px; } /* slightly more breathing room inside the group */
+
