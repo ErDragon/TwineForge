@@ -725,9 +725,34 @@ async function fetchRemoteVersion(){
         const k=document.createElement('span'); k.className='var-title'; k.textContent = ref.split('.').pop();
         const vwrap=document.createElement('div'); vwrap.className='var-value';
         const src=field.querySelector('.var-input');
-        const inp=document.createElement('input'); inp.className='var-input'; inp.type=src?.type||'text'; inp.value=src?.value||'';
+        const inp=document.createElement('input');
+        inp.className='var-input';
+        inp.type=src?.type||'text';
+        inp.value=src?.value||'';
+        inp.spellcheck=src?.spellcheck ?? false;
         if(src){
-          inp.addEventListener('input',()=>{ if(src.value!==inp.value){ src.value=inp.value; src.dispatchEvent(new Event('input',{bubbles:true})); src.dispatchEvent(new Event('change',{bubbles:true})); }});
+          inp.readOnly = src.readOnly;
+          inp.disabled = src.disabled;
+        }
+        if(src){
+          // Copy a few useful attributes so the pinned input behaves like the source
+          ['min','max','step','pattern','inputmode'].forEach(attr=>{
+            if(src.hasAttribute(attr)) inp.setAttribute(attr, src.getAttribute(attr));
+          });
+          const dispatchLikeSource=(type)=>{
+            try{
+              const Ctor = (type==='keyup'||type==='keydown'||type==='keypress') ? KeyboardEvent : Event;
+              src.dispatchEvent(new Ctor(type,{bubbles:true}));
+            }catch(e){ src.dispatchEvent(new Event(type,{bubbles:true})); }
+          };
+          const syncToSource=(type)=>{
+            if(src.value!==inp.value){ src.value=inp.value; }
+            const events = type==='change' ? ['change'] : ['input','keyup','change'];
+            events.forEach(dispatchLikeSource);
+          };
+          inp.addEventListener('input', ()=>syncToSource('input'));
+          inp.addEventListener('keyup', ()=>syncToSource('keyup'));
+          inp.addEventListener('change', ()=>syncToSource('change'));
           const sync=()=>{ if(inp.value!==src.value) inp.value=src.value; };
           src.addEventListener('input', sync); src.addEventListener('change', sync); src.addEventListener('keyup', sync);
         }
