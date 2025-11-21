@@ -725,9 +725,30 @@ async function fetchRemoteVersion(){
         const k=document.createElement('span'); k.className='var-title'; k.textContent = ref.split('.').pop();
         const vwrap=document.createElement('div'); vwrap.className='var-value';
         const src=field.querySelector('.var-input');
-        const inp=document.createElement('input'); inp.className='var-input'; inp.type=src?.type||'text'; inp.value=src?.value||'';
+        const inp=document.createElement('input');
+        inp.className='var-input';
+        inp.type=src?.type||'text';
+        inp.value=src?.value||'';
+        inp.spellcheck=src?.spellcheck ?? false;
         if(src){
-          inp.addEventListener('input',()=>{ if(src.value!==inp.value){ src.value=inp.value; src.dispatchEvent(new Event('input',{bubbles:true})); src.dispatchEvent(new Event('change',{bubbles:true})); }});
+          inp.readOnly = src.readOnly;
+          inp.disabled = src.disabled;
+        }
+        if(src){
+          // Copy a few useful attributes so the pinned input behaves like the source
+          ['min','max','step','pattern','inputmode'].forEach(attr=>{
+            if(src.hasAttribute(attr)) inp.setAttribute(attr, src.getAttribute(attr));
+          });
+          const syncToSource=(type)=>{
+            if(src.value!==inp.value){
+              src.value=inp.value;
+              const evType = type || 'input';
+              src.dispatchEvent(new Event(evType,{bubbles:true}));
+              if(evType!=='change') src.dispatchEvent(new Event('change',{bubbles:true}));
+            }
+          };
+          inp.addEventListener('input', ()=>syncToSource('input'));
+          inp.addEventListener('change', ()=>syncToSource('change'));
           const sync=()=>{ if(inp.value!==src.value) inp.value=src.value; };
           src.addEventListener('input', sync); src.addEventListener('change', sync); src.addEventListener('keyup', sync);
         }
