@@ -1101,19 +1101,21 @@ async function fetchRemoteVersion(){
     }
   })();
 
+  let observer = null;
   function observe(){
     const el=cont(); if(!el) return;
     let scheduled=false;
     const run = ()=>{
       scheduled=false;
+      if(observer){ try{ observer.disconnect(); }catch(e){} }
       ensureHeader();
       if (el.querySelector('.var-type-object')) ensurePinnedSection();
-      addPinButtons(); updatePinButtons(); renderPinned();
+      addPinButtons(); updatePinButtons(); renderPinned(); edgeAndDrag();
+      if(observer){ try{ observer.observe(el,{childList:true, subtree:true}); }catch(e){} }
     };
-    const mo=new MutationObserver(()=>{ if(!scheduled){ scheduled=true; requestAnimationFrame(run);} });
-    mo.observe(el,{childList:true, subtree:true});
-    ensureHeader(); if (el.querySelector('.var-type-object')) ensurePinnedSection();
-    addPinButtons(); updatePinButtons(); renderPinned(); edgeAndDrag();
+    observer=new MutationObserver(()=>{ if(!scheduled){ scheduled=true; requestAnimationFrame(run);} });
+    observer.observe(el,{childList:true, subtree:true});
+    run();
   }
   function boot(){ const tick=()=>{ const el=cont(); if(!el){ setTimeout(tick, 80); return; } observe(); }; tick(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
