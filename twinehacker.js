@@ -727,7 +727,15 @@ async function fetchRemoteVersion(){
         const src=field.querySelector('.var-input');
         const inp=document.createElement('input'); inp.className='var-input'; inp.type=src?.type||'text'; inp.value=src?.value||'';
         if(src){
-          inp.addEventListener('input',()=>{ if(src.value!==inp.value){ src.value=inp.value; src.dispatchEvent(new Event('input',{bubbles:true})); src.dispatchEvent(new Event('change',{bubbles:true})); }});
+          const syncToSource=()=>{
+            if(src.value!==inp.value){
+              src.value=inp.value;
+              src.dispatchEvent(new KeyboardEvent('keyup',{bubbles:true}));
+              src.dispatchEvent(new Event('change',{bubbles:true}));
+            }
+          };
+          inp.addEventListener('input', syncToSource);
+          inp.addEventListener('change', syncToSource);
           const sync=()=>{ if(inp.value!==src.value) inp.value=src.value; };
           src.addEventListener('input', sync); src.addEventListener('change', sync); src.addEventListener('keyup', sync);
         }
