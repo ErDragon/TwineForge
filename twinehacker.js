@@ -429,6 +429,7 @@ installUpdateChecker(head);
       select.value='__none__';
       const link=document.getElementById(skinLinkId); if (link) link.remove();
       try{ localStorage.removeItem(SKIN_KEY); }catch(e){}
+      updateDeleteBtn();
     }
 
     function updateDeleteBtn(){
@@ -469,6 +470,7 @@ installUpdateChecker(head);
         addUserOption({ id, name, css, bannerDataUrl, skinClass });
       })();
       select.value = 'user:' + id;
+      updateDeleteBtn();
       applyUserSkinById(id);
     }
     fileInput.addEventListener('change', async (e)=>{
@@ -546,6 +548,7 @@ installUpdateChecker(head);
             select.value = saved.id;
           }
         }
+        updateDeleteBtn();
       }catch(e){}
     }
 
@@ -608,6 +611,7 @@ installUpdateChecker(head);
           else { select.value='__none__'; }
         setSelectToSaved();
         ensureCurrentOption();
+        updateDeleteBtn();
         }catch(e){}
       } catch (err) {
         console.warn('[TwineForge] Unable to load skins list:', err);
@@ -618,6 +622,7 @@ installUpdateChecker(head);
           populateSelectWithUserSkins();
           setSelectToSaved();
           ensureCurrentOption();
+          updateDeleteBtn();
         } catch(e){}
       }
     }
