@@ -1,7 +1,8 @@
 
 
 // === TwineForge meta ===
-const TF_VERSION = '1.4'; // keep in sync with manifest.json.version
+const TF_VERSION = '1.4'; // keep in sync with manifest.json/manifest.firefox.json version
+const TF_BUILD_TARGET = (typeof navigator !== 'undefined' && /firefox/i.test(navigator.userAgent)) ? 'firefox' : 'chromium';
 // TwineForge — clean build: pins, skinsbar, drag+resize, fixed Open/unpin
 (function(){try{if(typeof window.cont!=='function'){window.cont=function(){return document.getElementById('VarStateContainer');};}}catch(e){}})();
 function initFailed (msg){ alert("Failed to load TwineForge. Reason: " + msg); }
@@ -618,13 +619,15 @@ function installUpdateChecker(head){
 
   
 async function fetchRemoteVersion(){
-  // 1) Try raw manifest on main
+  // 1) Try raw manifest on main (per browser build)
+  const raw = (TF_BUILD_TARGET === 'firefox')
+    ? 'https://raw.githubusercontent.com/ErDragon/TwineForge/main/manifest.firefox.json'
+    : 'https://raw.githubusercontent.com/ErDragon/TwineForge/main/manifest.json';
   try{
-    const raw = 'https://raw.githubusercontent.com/ErDragon/TwineForge/main/manifest.json';
     const res = await fetch(raw, { cache: 'no-store' });
     if(res.ok){
       const j = await res.json();
-      if (j && j.version) { console.log('[TwineForge] Remote version (raw):', j.version); return j.version; }
+      if (j && j.version) { console.log('[TwineForge] Remote version (raw):', j.version, '('+TF_BUILD_TARGET+')'); return j.version; }
     } else {
       console.warn('[TwineForge] RAW fetch failed:', res.status);
     }
