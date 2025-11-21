@@ -506,22 +506,31 @@ installUpdateChecker(head);
     
 
     const skinLinkId='th-skin-link';
-    function applySkin(id, href, addClass, banner){
+    function applySkin(id, href, addClass, banner, cssText, isBuiltIn){
       const root=cont();
       Array.from(root.classList).filter(c=>c.startsWith('skin-')).forEach(c=>root.classList.remove(c));
       if(addClass) root.classList.add(addClass);
       let link=document.getElementById(skinLinkId);
-      if(id==='__none__' || !href){
+      let inline=document.getElementById('th-skin-inline');
+      if(id==='__none__' || (!href && !cssText)){
         if(link) link.remove();
+        if(inline) inline.remove();
         localStorage.removeItem(SKIN_KEY);
         ensureBanner(null);
         return;
       }
-      if(!link){
-        link=document.createElement('link'); link.id=skinLinkId; link.rel='stylesheet'; link.href=href;
-        document.documentElement.appendChild(link);
-      } else { link.href=href; }
-      localStorage.setItem(SKIN_KEY, JSON.stringify({id, href, addClass, banner: banner || null}));
+      if(cssText){
+        if(link) link.remove();
+        if(!inline){ inline=document.createElement('style'); inline.id='th-skin-inline'; document.documentElement.appendChild(inline); }
+        inline.textContent = cssText;
+      } else {
+        if(inline) inline.remove();
+        if(!link){
+          link=document.createElement('link'); link.id=skinLinkId; link.rel='stylesheet'; link.href=href;
+          document.documentElement.appendChild(link);
+        } else { link.href=href; }
+      }
+      localStorage.setItem(SKIN_KEY, JSON.stringify({id, href, addClass, banner: banner || null, css: cssText || null, builtin: !!isBuiltIn}));
       ensureBanner(banner || null);
     }
     
@@ -532,27 +541,48 @@ installUpdateChecker(head);
           if(String(saved.id).startsWith('user:')){
             applyUserSkinById(String(saved.id).slice(5));
             select.value = saved.id;
-            } else if (saved.href){
-              applySkin(saved.id, saved.href, saved.addClass, saved.banner);
+            } else if (saved.href || saved.css){
+              applySkin(saved.id, saved.href || null, saved.addClass, saved.banner, saved.css || null, saved.builtin);
             select.value = saved.id;
           }
         }
       }catch(e){}
     }
 
+    const BUILTIN_SKINS = [
+      { id: 'neon-grid-v2', file: 'Neon-Grid-V2.tfs.json' },
+      { id: 'twineforge-neon', file: 'TwineForge-Neon.tfs.json' },
+    ];
+    let builtinCache = {};
+    async function loadBuiltInSkins(base){
+      const out=[];
+      for (const entry of BUILTIN_SKINS){
+        try{
+          const res = await fetch(base + 'Skins/' + entry.file);
+          if(!res.ok) throw new Error('HTTP '+res.status);
+          const pkg = await res.json();
+          out.push(pkg);
+        }catch(err){
+          console.warn('[TwineForge] Unable to load built-in skin:', entry.id, err);
+        }
+      }
+      return out;
+    }
+
     async function loadSkinsList(){
-      const base=(document.getElementById('th-style')?.getAttribute('href')||'').replace(/twinehacker\.css.*$/,''); 
-      const url=base + 'Skins/skins.json';
+      const base=(document.getElementById('th-style')?.getAttribute('href')||'').replace(/twinehacker\.css.*$/,'');
       try{
-        const res = await fetch(url); if(!res.ok) throw new Error('HTTP '+res.status);
-        const data = await res.json();
-        select.innerHTML=''; select.appendChild(new Option('None (default)','__none__'));
-        (data.skins||[]).forEach(s=>{
-          const opt=new Option(s.name, s.id);
-          opt.dataset.href = base + 'Skins/' + s.file;
-          opt.dataset.cls = s.addClass || ('skin-' + (s.id||'custom'));
-          if (s.banner) opt.dataset.banner = s.banner;
+        select.innerHTML='';
+        select.appendChild(new Option('None (default)','__none__'));
+        const builtins = await loadBuiltInSkins(base);
+        builtinCache = {};
+        builtins.forEach(pkg=>{
+          const opt=new Option('★ ' + (pkg.name || pkg.id), pkg.id);
+          opt.dataset.cls = pkg.skinClass || ('skin-' + (pkg.id||'custom'));
+          if (pkg.bannerDataUrl) opt.dataset.banner = pkg.bannerDataUrl;
+          opt.dataset.builtin = '1';
           select.appendChild(opt);
+          builtinCache[pkg.id] = pkg;
         });
         // Add user skins (clear previous user options first)
         Array.from(select.querySelectorAll('option[data-user="1"]')).forEach(o=>o.remove());
@@ -561,7 +591,19 @@ installUpdateChecker(head);
           const saved = JSON.parse(localStorage.getItem(SKIN_KEY) || 'null');
           if(saved && saved.id){
             if(String(saved.id).startsWith('user:')){ applyUserSkinById(String(saved.id).slice(5)); select.value = saved.id; }
-            else { select.value = saved.id; applySkin(saved.id, saved.href, saved.addClass, saved.banner); }
+            else {
+              select.value = saved.id;
+              const opt = Array.from(select.options).find(o=>o.value===saved.id && o.dataset && o.dataset.builtin==='1');
+              const pkg = builtinCache[saved.id];
+              if ((opt || pkg) && (!saved.css || saved.builtin || saved.href)){
+                const banner = pkg?.bannerDataUrl || opt?.dataset.banner || null;
+                const cls = pkg?.skinClass || opt?.dataset.cls;
+                const cssText = pkg?.css || opt?.dataset.css || '';
+                applySkin(saved.id, null, cls, banner, cssText, true);
+              } else {
+                applySkin(saved.id, saved.href || null, saved.addClass, saved.banner, saved.css || null, saved.builtin);
+              }
+            }
           }
           else { select.value='__none__'; }
         setSelectToSaved();
@@ -584,7 +626,16 @@ installUpdateChecker(head);
       updateDeleteBtn();
       if (String(select.value||'').startsWith('user:')){ applyUserSkinById(select.value.slice(5)); return; }
       const v=select.value; if(v==='__none__'){ applySkin(v, null, null); return; }
-      const opt=select.options[select.selectedIndex]; const href=opt.dataset.href; const cls=opt.dataset.cls; const banner=opt.dataset.banner || null; applySkin(v, href, cls, banner);
+      const opt=select.options[select.selectedIndex];
+      if (opt && opt.dataset && opt.dataset.builtin==='1'){
+        const pkg = builtinCache[opt.value];
+        const cls = pkg?.skinClass || opt.dataset.cls;
+        const banner = (pkg?.bannerDataUrl || opt.dataset.banner || '');
+        const cssText = pkg?.css || opt.dataset.css || '';
+        applySkin(v, null, cls, banner, cssText, true);
+        return;
+      }
+      const href=opt?.dataset.href; const cls=opt?.dataset.cls; const banner=opt?.dataset.banner || null; applySkin(v, href, cls, banner);
     });
     immediateRestore();
     setSelectToSaved();
