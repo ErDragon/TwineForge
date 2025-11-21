@@ -731,24 +731,15 @@ async function fetchRemoteVersion(){
         inp.value=src?.value||'';
         inp.spellcheck=src?.spellcheck ?? false;
         if(src){
-          inp.readOnly = src.readOnly;
-          inp.disabled = src.disabled;
-        }
-        if(src){
-          // Copy a few useful attributes so the pinned input behaves like the source
-          ['min','max','step','pattern','inputmode'].forEach(attr=>{
-            if(src.hasAttribute(attr)) inp.setAttribute(attr, src.getAttribute(attr));
-          });
-          const syncToSource=(type)=>{
+          const syncToSource=()=>{
             if(src.value!==inp.value){
               src.value=inp.value;
-              const evType = type || 'input';
-              src.dispatchEvent(new Event(evType,{bubbles:true}));
-              if(evType!=='change') src.dispatchEvent(new Event('change',{bubbles:true}));
+              src.dispatchEvent(new KeyboardEvent('keyup',{bubbles:true}));
+              src.dispatchEvent(new Event('change',{bubbles:true}));
             }
           };
-          inp.addEventListener('input', ()=>syncToSource('input'));
-          inp.addEventListener('change', ()=>syncToSource('change'));
+          inp.addEventListener('input', syncToSource);
+          inp.addEventListener('change', syncToSource);
           const sync=()=>{ if(inp.value!==src.value) inp.value=src.value; };
           src.addEventListener('input', sync); src.addEventListener('change', sync); src.addEventListener('keyup', sync);
         }
