@@ -784,15 +784,16 @@ async function fetchRemoteVersion(){
         const k=document.createElement('span'); k.className='var-title'; k.textContent = ref.split('.').pop();
         const vwrap=document.createElement('div'); vwrap.className='var-value';
         const src=field.querySelector('.var-input');
-        const inp=document.createElement('input');
-        inp.className='var-input';
-        inp.type=src?.type||'text';
+        // Clone the source input so it keeps the same interactive affordances (cursor, focus, etc.)
+        const inp = src ? src.cloneNode(true) : document.createElement('input');
+        inp.classList.add('var-input');
+        inp.removeAttribute('id');
         inp.value=src?.value||'';
         inp.spellcheck=src?.spellcheck ?? false;
-        if(src){
-          inp.readOnly = src.readOnly;
-          inp.disabled = src.disabled;
-        }
+        inp.style.pointerEvents='auto';
+        inp.style.userSelect='text';
+        inp.tabIndex = 0;
+        if(!src){ inp.type='text'; }
         if(src){
           // Copy a few useful attributes so the pinned input behaves like the source
           ['min','max','step','pattern','inputmode'].forEach(attr=>{
@@ -809,11 +810,13 @@ async function fetchRemoteVersion(){
             const events = type==='change' ? ['change'] : ['input','keyup','change'];
             events.forEach(dispatchLikeSource);
           };
+          const syncFromSource=()=>{ if(inp.value!==src.value) inp.value=src.value; };
           inp.addEventListener('input', ()=>syncToSource('input'));
           inp.addEventListener('keyup', ()=>syncToSource('keyup'));
           inp.addEventListener('change', ()=>syncToSource('change'));
-          const sync=()=>{ if(inp.value!==src.value) inp.value=src.value; };
-          src.addEventListener('input', sync); src.addEventListener('change', sync); src.addEventListener('keyup', sync);
+          inp.addEventListener('mousedown', e=>e.stopPropagation());
+          inp.addEventListener('click', e=>e.stopPropagation());
+          src.addEventListener('input', syncFromSource); src.addEventListener('change', syncFromSource); src.addEventListener('keyup', syncFromSource);
         }
         const unp=document.createElement('button'); unp.className='th-pin active'; unp.title='Unpin'; unp.textContent='📌'; unp.dataset.action='unpin'; unp.dataset.ref=ref; unp.dataset.action='unpin'; unp.dataset.ref=ref;
         unp.addEventListener('click',(e)=>{ e.stopPropagation(); togglePin(ref); });
