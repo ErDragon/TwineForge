@@ -24,12 +24,28 @@ function trackChanges(oldVariablesJson){
             var ref = 'Gamestate.' + diffKey;
             var inputElement = document.querySelector('.var-input[data-ref="' + ref.replace(/"/g, '\"') + '"]');
             if(inputElement) { inputElement.value = diffVal.newVal; inputElement.classList.add('value-changed'); }
+            syncPinnedValues(ref, diffVal.newVal);
           }
         }
       }
     }
   }
   setTimeout(function(){ trackChanges(newVariablesJson); }, 250);
+}
+
+function syncPinnedValues(ref, value){
+  try{
+    const list=document.getElementById('th-pinned-list');
+    if(!list) return;
+    const rows=list.querySelectorAll('.var-field');
+    for(let i=0;i<rows.length;i++){
+      const row=rows[i];
+      if(row && row.dataset && row.dataset.ref===ref){
+        const inp=row.querySelector('input.var-input');
+        if(inp && inp.value!==String(value)) inp.value=value;
+      }
+    }
+  }catch(e){}
 }
 
 var objectToDOM = (function(){
