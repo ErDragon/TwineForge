@@ -1,0 +1,94 @@
+/* Neon Grid V2 demo skin */
+#VarStateContainer.skin-neon-grid{
+  background-image:
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,.06), transparent 40%),
+    linear-gradient(0deg, rgba(255,0,128,.06), rgba(0,255,255,.06)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 80px);
+  background-attachment: fixed;
+}
+#VarStateContainer.skin-neon-grid .th-btn,
+#VarStateContainer.skin-neon-grid select{
+  border-radius: 10px;
+  border: 1px solid rgba(0,255,200,.35);
+  box-shadow: 0 0 12px rgba(0,255,255,.25);
+  backdrop-filter: blur(2px);
+}
+#VarStateContainer.skin-neon-grid #th-header{
+  background: linear-gradient(180deg, rgba(0,255,255,.08), transparent);
+}
+#VarStateContainer.skin-neon-grid .var-row:hover{
+  outline: 1px dashed rgba(255,0,200,.35);
+  background-color: rgba(255,0,200,.06);
+}
+
+/* --- Neon Grid V2: global glow for controls --- */
+#VarStateContainer.skin-neon-grid button,
+#VarStateContainer.skin-neon-grid select,
+#VarStateContainer.skin-neon-grid input[type="text"],
+#VarStateContainer.skin-neon-grid input[type="search"],
+#VarStateContainer.skin-neon-grid .th-btn {
+  border-radius: 10px;
+  border: 1px solid rgba(0,255,200,.45);
+  box-shadow: 0 0 14px rgba(0,255,255,.30), inset 0 0 6px rgba(0,255,200,.10);
+  background: rgba(6,20,24,.6);
+  transition: box-shadow .15s ease, border-color .15s ease, transform .06s ease;
+}
+
+#VarStateContainer.skin-neon-grid button:hover,
+#VarStateContainer.skin-neon-grid select:hover,
+#VarStateContainer.skin-neon-grid input[type="text"]:hover,
+#VarStateContainer.skin-neon-grid input[type="search"]:hover,
+#VarStateContainer.skin-neon-grid .th-btn:hover {
+  border-color: rgba(0,255,255,.70);
+  box-shadow: 0 0 18px rgba(0,255,255,.45), inset 0 0 8px rgba(0,255,200,.18);
+}
+
+#VarStateContainer.skin-neon-grid button:active,
+#VarStateContainer.skin-neon-grid .th-btn:active {
+  transform: translateY(1px);
+}
+
+/* Tiny arrow buttons, pin, etc. */
+#VarStateContainer.skin-neon-grid .th-pin,
+#VarStateContainer.skin-neon-grid .th-arrow,
+#VarStateContainer.skin-neon-grid .th-icon {
+  border: 1px solid rgba(0,255,200,.45);
+  box-shadow: 0 0 10px rgba(0,255,255,.28), inset 0 0 4px rgba(0,255,200,.12);
+  background: rgba(6,20,24,.55);
+  border-radius: 8px;
+}
+
+/* Focus ring */
+#VarStateContainer.skin-neon-grid :focus-visible {
+  outline: 2px solid rgba(0,255,255,.75);
+  outline-offset: 2px;
+  box-shadow: 0 0 22px rgba(0,255,255,.55);
+}
+
+/* Tabs or segmented controls, if present */
+#VarStateContainer.skin-neon-grid .th-tab,
+#VarStateContainer.skin-neon-grid .th-segment {
+  border: 1px solid rgba(0,255,200,.45);
+  box-shadow: 0 0 12px rgba(0,255,255,.30);
+  background: rgba(6,20,24,.6);
+  border-radius: 10px;
+}
+#VarStateContainer.skin-neon-grid .th-tab.active,
+#VarStateContainer.skin-neon-grid .th-segment.active {
+  border-color: rgba(0,255,255,.85);
+  box-shadow: 0 0 20px rgba(0,255,255,.55), inset 0 0 8px rgba(0,255,200,.16);
+}
+/* Header controls specific */
+#VarStateContainer.skin-neon-grid #th-header input,
+#VarStateContainer.skin-neon-grid #th-header button,
+#VarStateContainer.skin-neon-grid #th-header select {
+  border: 1px solid rgba(0,255,200,.45);
+  box-shadow: 0 0 14px rgba(0,255,255,.30), inset 0 0 6px rgba(0,255,200,.10);
+  background: rgba(6,20,24,.6);
+}
+
+#VarStateContainer.skin-neon-grid #th-prev,
+#VarStateContainer.skin-neon-grid #th-next {
+  border-radius: 8px;
+}
+

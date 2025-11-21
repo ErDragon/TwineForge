@@ -506,7 +506,7 @@ installUpdateChecker(head);
     
 
     const skinLinkId='th-skin-link';
-    function applySkin(id, href, addClass){
+    function applySkin(id, href, addClass, banner){
       const root=cont();
       Array.from(root.classList).filter(c=>c.startsWith('skin-')).forEach(c=>root.classList.remove(c));
       if(addClass) root.classList.add(addClass);
@@ -514,13 +514,15 @@ installUpdateChecker(head);
       if(id==='__none__' || !href){
         if(link) link.remove();
         localStorage.removeItem(SKIN_KEY);
+        ensureBanner(null);
         return;
       }
       if(!link){
         link=document.createElement('link'); link.id=skinLinkId; link.rel='stylesheet'; link.href=href;
         document.documentElement.appendChild(link);
       } else { link.href=href; }
-      localStorage.setItem(SKIN_KEY, JSON.stringify({id, href, addClass}));
+      localStorage.setItem(SKIN_KEY, JSON.stringify({id, href, addClass, banner: banner || null}));
+      ensureBanner(banner || null);
     }
     
     function immediateRestore(){
@@ -530,8 +532,8 @@ installUpdateChecker(head);
           if(String(saved.id).startsWith('user:')){
             applyUserSkinById(String(saved.id).slice(5));
             select.value = saved.id;
-          } else if (saved.href){
-            applySkin(saved.id, saved.href, saved.addClass);
+            } else if (saved.href){
+              applySkin(saved.id, saved.href, saved.addClass, saved.banner);
             select.value = saved.id;
           }
         }
@@ -548,7 +550,8 @@ installUpdateChecker(head);
         (data.skins||[]).forEach(s=>{
           const opt=new Option(s.name, s.id);
           opt.dataset.href = base + 'Skins/' + s.file;
-          opt.dataset.cls = 'skin-' + (s.id||'custom');
+          opt.dataset.cls = s.addClass || ('skin-' + (s.id||'custom'));
+          if (s.banner) opt.dataset.banner = s.banner;
           select.appendChild(opt);
         });
         // Add user skins (clear previous user options first)
@@ -558,7 +561,7 @@ installUpdateChecker(head);
           const saved = JSON.parse(localStorage.getItem(SKIN_KEY) || 'null');
           if(saved && saved.id){
             if(String(saved.id).startsWith('user:')){ applyUserSkinById(String(saved.id).slice(5)); select.value = saved.id; }
-            else { select.value = saved.id; applySkin(saved.id, saved.href, saved.addClass); }
+            else { select.value = saved.id; applySkin(saved.id, saved.href, saved.addClass, saved.banner); }
           }
           else { select.value='__none__'; }
         setSelectToSaved();
@@ -581,7 +584,7 @@ installUpdateChecker(head);
       updateDeleteBtn();
       if (String(select.value||'').startsWith('user:')){ applyUserSkinById(select.value.slice(5)); return; }
       const v=select.value; if(v==='__none__'){ applySkin(v, null, null); return; }
-      const opt=select.options[select.selectedIndex]; const href=opt.dataset.href; const cls=opt.dataset.cls; applySkin(v, href, cls);
+      const opt=select.options[select.selectedIndex]; const href=opt.dataset.href; const cls=opt.dataset.cls; const banner=opt.dataset.banner || null; applySkin(v, href, cls, banner);
     });
     immediateRestore();
     setSelectToSaved();

@@ -1,0 +1,17 @@
+{
+  "skins": [
+    {
+      "id": "neon-grid-v2",
+      "name": "Neon Grid V2",
+      "file": "neon-grid-v2.css",
+      "addClass": "skin-neon-grid",
+      "banner": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAADhD/NxAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6QoFDTgcexv7AAAADElEQVR4nGNgAAEAAAUAAfKiXJ4AAAAASUVORK5CYII="
+    },
+    {
+      "id": "twineforge-neon",
+      "name": "TwineForge Neon",
+      "file": "twineforge-neon.css",
+      "addClass": "skin-twineforge-neon"
+    }
+  ]
+}
