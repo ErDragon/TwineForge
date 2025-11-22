@@ -1,7 +1,7 @@
 {
   "name": "TwineForge",
   "short_name": "TwineForge",
-  "version": "1.4",
+  "version": "1.5",
   "description": "Lightweight MV3 helper UI for Twine/SugarCube.",
   "manifest_version": 3,
   "action": { "default_title": "TwineForge" },
