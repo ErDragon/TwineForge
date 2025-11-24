@@ -732,7 +732,7 @@ async function fetchRemoteVersion(){
       if(rel>0){
         setBadge('new', 'v'+remote);
         btn.title = 'Update available: v'+remote+' (click to open releases)';
-        try{ const m=document.getElementById('th-footer-msg'); if(m) m.textContent = 'New version is available! Click ForgeLink to download it.'; }catch(e){}
+        try{ const m=document.getElementById('th-footer-msg'); if(m) m.textContent = 'New version is available! Click ForgeLink to open releases.'; }catch(e){}
         btn.dataset.updateUrl = 'https://github.com/ErDragon/TwineForge/releases';
         try{const f=document.getElementById('th-footer'); if(f){ f.classList.add('show'); f.style.display=''; }}catch(e){}
       } else {
@@ -750,11 +750,12 @@ async function fetchRemoteVersion(){
   }
 
   btn.addEventListener('click', ()=>{
-  // Shift+Click opens releases, normal click downloads ZIP
-  if (btn.dataset.updateUrl && !window.event?.shiftKey){ thDownloadLatestZip(); return; }
-  if (btn.dataset.updateUrl && window.event?.shiftKey){ try{ window.open(btn.dataset.updateUrl,'_blank','noopener'); }catch(e){} return; }
-  runCheck();
-});
+    if (btn.dataset.updateUrl){
+      try{ window.open(btn.dataset.updateUrl,'_blank','noopener'); }catch(e){}
+      return;
+    }
+    runCheck();
+  });
 
   
   // Create update footer if not exists
@@ -762,7 +763,7 @@ async function fetchRemoteVersion(){
   if (!footer) {
     footer = document.createElement('div');
     footer.id = 'th-footer';
-    footer.innerHTML = `<span class="msg" id="th-footer-msg">New version is available! Click <b>ForgeLink</b> to download it.</span>`;
+    footer.innerHTML = `<span class="msg" id="th-footer-msg">New version is available! Click <b>ForgeLink</b> to open releases.</span>`;
     const cont = document.getElementById('VarStateContainer');
     if (cont) cont.appendChild(footer);
     footer.style.display = 'none';
