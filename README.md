@@ -17,6 +17,11 @@ Updated for Manifest V3 and modern browsers.
 1. Use `manifest.firefox.json` as the manifest file for Firefox packages.
 2. In temporary installs (`about:debugging`), select `manifest.firefox.json` via **This Firefox** → **Load Temporary Add-on**.
 3. Keep `manifest.json` for Chromium-based browsers.
+4. To build installable files (`.xpi` and `.zip`), run:
+   ```bash
+   ./build-firefox.sh
+   ```
+   Packages are created in `dist/` and can be loaded in Firefox (`about:debugging`) or distributed as files.
 
 ---
 
