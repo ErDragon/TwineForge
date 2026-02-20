@@ -1,0 +1,32 @@
+{
+  "name": "TwineForge",
+  "short_name": "TwineForge",
+  "version": "1.5",
+  "description": "Lightweight helper UI for Twine/SugarCube (Firefox build).",
+  "manifest_version": 3,
+  "action": { "default_title": "TwineForge" },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["file:///*", "http://localhost/*", "http://127.0.0.1/*"],
+  "background": { "service_worker": "background.js" },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "twineforge@local",
+      "strict_min_version": "121.0"
+    }
+  },
+  "web_accessible_resources": [{
+    "resources": ["twinehacker.js", "twinehacker.css", "show-custom-globals.js", "Icons/*", "Skins/*"],
+    "matches": ["file:///*", "http://localhost/*", "http://127.0.0.1/*"]
+  }],
+  "icons": { "16": "Icons/16.png", "48": "Icons/48.png", "128": "Icons/128.png" },
+  "commands": {
+    "enable_twine_hacker": {
+      "suggested_key": { "default": "Ctrl+Shift+H" },
+      "description": "Inject TwineForge panel"
+    },
+    "reset_panel_geometry": {
+      "suggested_key": { "default": "Ctrl+Shift+R" },
+      "description": "Reset TwineForge window position and size"
+    }
+  }
+}

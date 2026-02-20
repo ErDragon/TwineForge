@@ -13,6 +13,13 @@ Updated for Manifest V3 and modern browsers.
 
 ---
 
+## 🦊 Firefox build
+1. Use `manifest.firefox.json` as the manifest file for Firefox packages.
+2. In temporary installs (`about:debugging`), select `manifest.firefox.json` via **This Firefox** → **Load Temporary Add-on**.
+3. Keep `manifest.json` for Chromium-based browsers.
+
+---
+
 ## 🕹️ Usage
 - Open a Twine/SugarCube game in your browser.  
 - Click the TwineForge icon in the toolbar, or use keyboard shortcuts:  
